@@ -31,34 +31,26 @@ https://webp2p.augok.com/p2pdemo/?url=https://m3u8.link.address/video.m3u8
 
 ## Quick Start
 
-Load the latest CDN hosted version of JavaScript library.
+Project upgrade uses module loading.
 
-Add these tags to your document's `<head>`:
-
-```html
-<script src="https://unpkg.com/webp2p-hls@latest/p2pl.js"></script>
-<script src="https://unpkg.com/webp2p-hls@latest/p2ph.js"></script>
-<script src="https://unpkg.com/webp2p-hls@latest/p2phls.js"></script>
-```
+Support the latest version of hls.js.
 
 Then there's a free, CDN hosted version of hls.js that anyone can use. Add these tags to your document's `<head>`:
 
 ```html
-<script src="https://unpkg.com/hls.min@0.0.2/index.js"></script>
+<script src="https://unpkg.com/hls.js@1.5.15/dist/hls.min.js"></script>
 ```
 
 ## Example by DPlayer
 
 ```html
-<script src="https://unpkg.com/webp2p-hls@latest/p2pl.js"></script>
-<script src="https://unpkg.com/webp2p-hls@latest/p2ph.js"></script>
-<script src="https://unpkg.com/webp2p-hls@latest/p2phls.js"></script>
-<script src="https://unpkg.com/hls.min@0.0.2/index.js"></script>
+<script src="https://unpkg.com/hls.js@1.5.15/dist/hls.min.js"></script>
 <!-- unpkg : use the latest version of DPlayer.js -->
 <script src="https://unpkg.com/dplayer/dist/DPlayer.min.js"></script>
 ```
 
 ```js
+import { P2Phls } from "https://unpkg.com/webp2p-hls@latest/p2phls.js";
 // url is link address.
 var p2phls = new P2Phls(url);
 
@@ -71,12 +63,7 @@ var player = new DPlayer({
         type: 'customHls',
         customType: {
             'customHls': function(video, player) {
-                var hls = new Hls({
-                    liveSyncDurationCount: 7,
-                    loader: p2phls.getLoader()
-                });
-                p2phls.initHlsPlayer(hls);
-
+                var hls = p2phls.getHlsPlayer();
                 hls.loadSource(video.src);
                 hls.attachMedia(video);
             }
@@ -86,16 +73,6 @@ var player = new DPlayer({
 ```
 
 ## API
-
-**isP2P()**
-
-Determine whether to support P2P.
-
-```js
-// p2phls is new P2Phls(url) object
-p2phls.isP2P()
-// return true or false
-```
 
 **isHls()**
 

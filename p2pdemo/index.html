@@ -5,11 +5,8 @@
         <title>P2P Demo</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://unpkg.com/jquery@1.12.4/dist/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-        <script type='text/javascript' src="https://unpkg.com/webp2p-hls@latest/p2pl.js"></script>
-        <script type='text/javascript' src="https://unpkg.com/webp2p-hls@latest/p2ph.js"></script>
-        <script type='text/javascript' src="https://unpkg.com/webp2p-hls@latest/p2phls.js"></script>
-        <script src="https://unpkg.com/hls.min@0.0.2/index.js" type="text/javascript" charset="utf-8"></script>
-        <script src="https://unpkg.com/dplayer@1.27.0/dist/DPlayer.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="https://unpkg.com/hls.js@1.5.15/dist/hls.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="https://unpkg.com/dplayer@1.27.1/dist/DPlayer.min.js" type="text/javascript" charset="utf-8"></script>
         <link type="text/css" rel="stylesheet" href="./css/index.css?2" />
     </head>
     <body>
@@ -50,7 +47,8 @@
             </div>
             <div class="action-button">创建新连接</div>
         </div>
-        <script>
+        <script type="module">
+            import { P2Phls } from "../js/p2phls.js";
             $(".action-button").on('click',function(){
                 window.open(document.location.href, '_blank');
             });
@@ -60,10 +58,7 @@
                 alert("请在链接中添加url参数以及相应的m3u8播放地址");
             }else{
                 var p2phls = new P2Phls(urls);
-                if(!p2phls.isP2P()){
-                    alert("此浏览器不支持p2p加速，建议使用chrome浏览器");
-                }
-                if (p2phls.isHls() && p2phls.isP2P()) {
+                if (p2phls.isHls()) {
                     var player = new DPlayer({
                         container: document.getElementById('video'),
                         volume: 1,
@@ -74,16 +69,8 @@
                             type: 'customHls',
                             customType: {
                                 'customHls': function(video, player) {
-                                    if(p2phls.isP2P()){
-                                        var hls = new Hls({
-                                            liveSyncDurationCount: 7,
-                                            loader: p2phls.getLoader()
-                                        });
-                                        p2phls.initHlsPlayer(hls);
-                                    }else{
-                                        var hls = new Hls();
-                                    }
-                                    hls.loadSource(video.src);
+                                    var hls = p2phls.getHlsPlayer();
+                                    hls.loadSource(urls);
                                     hls.attachMedia(video);
                                 }
                             }
@@ -92,25 +79,23 @@
                     player.on('loadstart', function() {
                         $('#video').find('.dplayer-menu .dplayer-menu-item').not(":eq(0)").remove();
                     });
-                    if (p2phls.isP2P()) {
-                        p2phls.on('bytechange', function(data){
-                            var httpMb = data.http / 1048576;
-                            var p2pMb = data.p2p / 1048576;
-                            var totalMb = httpMb + p2pMb;
-                            var p2pr = p2pMb / totalMb * 100;
-                            $('.httpmb').text(httpMb.toFixed(1));
-                            if(p2pMb) {
-                                $('.p2pmb').text(p2pMb.toFixed(1));
-                                $('.p2pr').text(p2pr.toFixed(1));
-                            } else {
-                                $('.p2pmb').text('0');
-                                $('.p2pr').text('0');
-                            } 
-                        });
-                        p2phls.on('peers', function(num,peer){
-                            num > 0 ? $('.peers').text(num):$('.peers').text('0');
-                        });
-                    }
+                    p2phls.on('bytechange', function(data){
+                        var httpMb = data.http / 1048576;
+                        var p2pMb = data.p2p / 1048576;
+                        var totalMb = httpMb + p2pMb;
+                        var p2pr = p2pMb / totalMb * 100;
+                        $('.httpmb').text(httpMb.toFixed(1));
+                        if(p2pMb) {
+                            $('.p2pmb').text(p2pMb.toFixed(1));
+                            $('.p2pr').text(p2pr.toFixed(1));
+                        } else {
+                            $('.p2pmb').text('0');
+                            $('.p2pr').text('0');
+                        } 
+                    });
+                    p2phls.on('peers', function(num,peer){
+                        num > 0 ? $('.peers').text(num):$('.peers').text('0');
+                    });
                 }else{
                     alert("此浏览器不支持加速器解码，将使用普通模式播放");
                     $('#video').html('<video autoplay x5-playsinline="" playsinline="" webkit-playsinline="" x-webkit-airplay="allow" preload="true" controls src="' + urls + '" style="width:100%;height:100%;"></video>');
